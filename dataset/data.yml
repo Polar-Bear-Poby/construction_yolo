@@ -1,0 +1,14 @@
+# YOLO 데이터셋 설정 파일
+# 건축 도면 객체 검출 데이터셋 (toilet, washstand, sink, bathtub, gas_stove)
+
+# 학습 데이터 경로
+train: /home/themiraclesoft/wishket/dataset/train/images
+
+# 검증 데이터 경로
+val: /home/themiraclesoft/wishket/dataset/valid/images
+
+# 클래스 수
+nc: 5
+
+# 클래스 이름 (YOLO class_id 순서)
+names: ['toilet', 'washstand', 'sink', 'bathtub', 'gas_stove']
