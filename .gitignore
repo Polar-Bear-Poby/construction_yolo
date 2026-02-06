@@ -23,5 +23,5 @@ runs/
 train_logs/
 wandb/
 
-# Large model files - exclude from git, upload to releases instead
+# Large model files - share via Google Drive instead
 fine_tuning_weights/
