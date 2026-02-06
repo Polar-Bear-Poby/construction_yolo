@@ -1,0 +1,85 @@
+# Dockerignore - 이미지에서 제외할 파일/폴더
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# 환경 변수 (실제 키 포함)
+.env
+
+# Python 캐시
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# 가상 환경
+.venv/
+venv/
+env/
+ENV/
+
+# 이미지 파일 (볼륨으로 마운트)
+*.png
+*.jpg
+*.jpeg
+*.bmp
+dataset/train/images/*
+dataset/valid/images/*
+
+# 학습 결과 및 로그 (볼륨으로 마운트)
+results/
+runs/
+training_logs/
+train_logs/
+inference_results/
+wandb/
+
+# 백업 폴더
+labels_backup/
+original_code/
+
+# 임시 파일
+*.log
+*.bak
+*.tmp
+*.swp
+*.swo
+*~
+
+# IDE
+.vscode/
+.idea/
+*.sublime-*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# 큰 모델 파일 (선택적 - 필요시 주석 해제)
+# fine_tuning_weights/*.pt
+
+# 테스트 및 문서
+tests/
+docs/
+*.md
+!README.md

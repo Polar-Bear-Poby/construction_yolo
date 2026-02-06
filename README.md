@@ -11,24 +11,51 @@
 - **단계별 학습**: 효율적인 GPU 리소스 활용
 - **고성능 추론**: 학습된 모델로 커스텀 이미지 추론
 
-## 📦 설치 및 환경 설정
+## 📦 빠른 시작
 
-### 1. 필요 조건
-- Python 3.11+
-- CUDA 지원 GPU (RTX 4090 x4 권장)
-- uv 패키지 매니저
+### 로컬 환경
 
-### 2. 설치
 ```bash
-# 프로젝트 디렉토리로 이동
-cd /home/themiraclesoft/wishket
+# 1. 클론 및 환경 설정
+git clone https://github.com/yourname/wishket.git
+cd wishket
+cp .env.example .env
+# .env 파일에 WANDB_API_KEY 설정
 
-# 의존성 설치 (이미 완료됨)
-# uv add ultralytics
+# 2. 의존성 설치
+uv sync  # 또는 pip install -r requirements.txt
 
-# 실행 권한 부여
-chmod +x run_all_training.sh
+# 3. 학습
+./run_all_training_cli.sh
+
+# 4. 추론
+uv run code/infer_yolo26.py --model_size s --images_dir /path/to/images
 ```
+
+### Docker 환경
+
+```bash
+# 1. 클론 및 환경 설정
+git clone https://github.com/yourname/wishket.git
+cd wishket
+cp .env.example .env
+# .env 파일에 WANDB_API_KEY 설정
+
+# 2. Docker 실행
+docker-compose up -d
+docker-compose exec yolo26-train bash
+
+# 3. 컨테이너 내에서
+./run_all_training_cli.sh  # 학습
+uv run code/infer_yolo26.py --model_size s --images_dir /path/to/images  # 추론
+```
+
+자세한 Docker 사용법은 [DOCKER_GUIDE.md](DOCKER_GUIDE.md)를 참조하세요.
+
+### 필요 조건
+
+**로컬:** Python 3.11+, CUDA 12.4+, GPU  
+**Docker:** Docker 20.10+, Docker Compose 2.0+, NVIDIA Docker Runtime
 
 ## 🎯 타겟 클래스 (JSON → YOLO 변환)
 
@@ -42,77 +69,42 @@ chmod +x run_all_training.sh
 
 ## 🔧 사용법
 
-### 1. 전체 모델 단계별 학습
+### 학습
+
 ```bash
-# s+m 동시 → l+x 순차 학습
-./run_all_training.sh
+# 로컬
+./run_all_training_cli.sh
+
+# Docker
+docker-compose exec yolo26-train ./run_all_training_cli.sh
 ```
 
-### 2. 개별 모델 학습
-```bash
-# YOLO26s 학습
-python train_yolo.py --model_size s --epochs 200 --batch_size 64
+### 추론
 
-# YOLO26m 학습 (GPU 0,1 사용)
-python train_yolo.py --model_size m --epochs 300 --device "0,1"
-```
-
-### 3. 학습된 모델 추론
 ```bash
-# 기본 추론 (자동 출력 폴더 생성)
+# 로컬
 uv run code/infer_yolo26.py --model_size s --images_dir /path/to/images
 
-# GPU 지정하여 추론 (멀티 GPU 병렬 추론)
-uv run code/infer_yolo26.py \
-    --model_size s \
-    --images_dir /path/to/images \
-    --gpu 0
+# Docker (컨테이너 내)
+uv run code/infer_yolo26.py --model_size s --images_dir /path/to/images
 
-# 4개 터미널에서 병렬 추론 (각각 다른 GPU)
-# Terminal 1:
-uv run code/infer_yolo26.py --model_size s --images_dir /path/to/images --weights_dir fine_tuning_weights --gpu 0
-# Terminal 2: 
-uv run code/infer_yolo26.py --model_size m --images_dir /path/to/images --weights_dir fine_tuning_weights --gpu 1
-# Terminal 3:
-uv run code/infer_yolo26.py --model_size l --images_dir /path/to/images --weights_dir fine_tuning_weights --gpu 2
-# Terminal 4:
-uv run code/infer_yolo26.py --model_size x --images_dir /path/to/images --weights_dir fine_tuning_weights --gpu 3
-
-# 고급 설정으로 추론
-uv run code/infer_yolo26.py \
-    --model_size l \
-    --images_dir /path/to/images \
-    --output_dir /custom/output/path \
-    --conf 0.25 \
-    --iou 0.45 \
-    --font_size 16 \
-    --gpu 2
-
-# 사용 가능한 옵션:
-# --model_size: s, m, l, x (학습된 모델 크기)
-# --images_dir: 추론할 이미지 폴더 (필수)
-# --weights_dir: 가중치 파일들이 있는 폴더 (기본값: fine_tuning_weights)
-# --output_dir: 결과 저장 폴더 (생략시 자동 생성)
-# --conf: 신뢰도 임계값 (기본값: 0.25)
-# --iou: IoU 임계값 (기본값: 0.45)
-# --font_size: 라벨 폰트 크기 (기본값: 16)
-# --gpu: GPU 디바이스 번호 (기본값: 0)
+# Docker (외부에서 실행)
+docker run --rm --gpus all \
+  -v /path/to/images:/workspace/input:ro \
+  -v $(pwd)/inference_results:/workspace/inference_results \
+  yolo26-construction:latest \
+  uv run code/infer_yolo26.py --model_size s --images_dir /workspace/input
 ```
 
-**추론 결과 저장 구조:**
-```
-inference_results/
-└── yolo26{모델크기}_{타임스탬프}/
-    ├── predict_images/     # 탐지 결과 이미지들
-    └── predict_labels/     # YOLO 형식 라벨 파일들
-```
-- 출력 폴더 미지정시: `inference_results/yolo26{모델크기}_{타임스탬프}/`
-- 예시: `inference_results/yolo26l_20260206_143022/`
+### 추론 옵션
 
-### 4. JSON 데이터 변환
 ```bash
-# COCO JSON을 YOLO 형식으로 변환
-python code/convert_json_to_yolo_ultralytics.py
+--model_size s|m|l|x    # 모델 크기
+--images_dir <path>     # 이미지 디렉토리
+--gpu <number>          # GPU 번호 (기본값: 0)
+--conf <float>          # 신뢰도 임계값 (기본값: 0.25)
+--iou <float>           # IoU 임계값 (기본값: 0.45)
+--output_dir <path>     # 출력 디렉토리 (생략시 자동 생성)
 ```
 
 ## 📊 데이터셋 구조
@@ -179,21 +171,46 @@ dataset/
 - **저장 형식**: JPG/PNG 이미지
 - **커스텀 설정**: 폰트 크기, 선 두께, 신뢰도/IoU 임계값
 
-## 🔧 핵심 파일 구조
+## 🔧 핵심 파일 및 스크립트
 
 ```
-/home/themiraclesoft/wishket/
-├── run_all_training.sh           # 메인 단계별 학습 스크립트
-├── train_yolo.py                # 개별 모델 학습 스크립트
+프로젝트 디렉토리
+├── setup.sh                      # 🚀 초기 설정 (로컬/Docker 공통)
+├── docker-train.sh               # 🐳 Docker 학습 시작
+├── docker-infer.sh               # 🐳 Docker 추론 실행
+├── run_all_training_cli.sh       # 단계별 학습 (로컬)
+├── Dockerfile                    # Docker 이미지 정의
+├── docker-compose.yml            # Docker Compose 설정
+├── .dockerignore                 # Docker 제외 파일
+├── .env.example                  # 환경 변수 템플릿
 ├── code/
-│   ├── infer_yolo26.py           # 학습된 모델 추론
+│   ├── yolo26_train.py           # 간단한 학습
+│   ├── yolo26_train_cli.py       # 고급 학습 (W&B)
+│   ├── infer_yolo26.py           # 추론
 │   ├── convert_json_to_yolo_ultralytics.py  # JSON→YOLO 변환
-│   ├── yolo_train.py             # 학습 유틸리티
-│   └── README.md                 # code 폴더 상세 설명
-├── dataset/                      # YOLO 데이터셋
-├── results/                      # 학습된 모델 결과
-└── yolo26*.pt                    # 사전 훈련된 모델들
+│   └── README.md                 # 상세 설명
+├── dataset/
+│   ├── data.yml                  # 데이터셋 설정
+│   ├── train/
+│   │   ├── images/               # 학습 이미지 (볼륨 마운트)
+│   │   └── labels/               # 학습 라벨
+│   └── valid/
+│       ├── images/               # 검증 이미지 (볼륨 마운트)
+│       └── labels/               # 검증 라벨
+├── fine_tuning_weights/          # 학습된 모델
+├── results/                      # 학습 결과 (로컬/Docker 공유)
+├── training_logs/                # 학습 로그 (로컬/Docker 공유)
+└── inference_results/            # 추론 결과 (로컬/Docker 공유)
 ```
+
+### 스크립트 설명
+
+| 스크립트 | 환경 | 설명 |
+|---------|------|------|
+| `setup.sh` | 로컬/Docker | 초기 설정 (.env, 디렉토리, 권한) |
+| `run_all_training_cli.sh` | 로컬 | 단계별 학습 실행 |
+| `docker-train.sh` | Docker | Docker Compose로 학습 시작 |
+| `docker-infer.sh` | Docker | Docker로 추론 실행 |
 
 ## 🚨 문제 해결
 
@@ -238,17 +255,19 @@ uv run code/infer_yolo26.py --font_size 20
 
 ## 📞 지원 및 문의
 
-- 프로젝트 위치: `/home/themiraclesoft/wishket/`
 - 로그 모니터링: `tail -f training_logs/*.log`
 - GPU 모니터링: `nvidia-smi -l 1`
 - W&B 모니터링: 프로젝트 `yolo26-construction`
 - Code 상세 설명: [code/README.md](code/README.md)
 
+## 🐳 Docker 배포
+
+Docker를 사용하면 환경 설정 없이 바로 실행할 수 있습니다. 자세한 내용은 [DOCKER_GUIDE.md](DOCKER_GUIDE.md)를 참조하세요.
+
 ---
 
 **주의사항**: 
-- 학습 전 GPU 메모리 상태를 확인하세요
-- nohup 실행 시 로그 파일 위치를 확인하세요
-- W&B는 기본적으로 자동 연결됩니다
-- 추론시 결과 폴더는 자동 생성됩니다 (`yolo26{size}_inference_result_{timestamp}`)
+- 모든 경로는 상대 경로로 설정되어 있어 프로젝트 루트 내 어디서든 실행 가능
+- 학습 전 GPU 메모리 상태 확인 (`nvidia-smi`)
+- W&B는 `.env` 파일에 API 키 설정 시 자동 연결
 

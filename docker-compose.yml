@@ -1,0 +1,59 @@
+# Docker Compose - YOLO26 건축 도면 객체 탐지 시스템
+version: '3.8'
+
+services:
+  yolo26-train:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: yolo26-construction:latest
+    container_name: yolo26-train
+    
+    # GPU 설정 (모든 GPU 사용)
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    
+    # 환경 변수 (.env 파일에서 로드)
+    env_file:
+      - .env
+    
+    # 볼륨 마운트 (데이터와 결과 공유)
+    volumes:
+      # 데이터셋 이미지 (로컬 → 컨테이너)
+      - ./dataset/train/images:/workspace/dataset/train/images:ro
+      - ./dataset/valid/images:/workspace/dataset/valid/images:ro
+      
+      # 학습 결과 (컨테이너 → 로컬)
+      - ./results:/workspace/results
+      - ./training_logs:/workspace/training_logs
+      
+      # 추론 결과 (컨테이너 → 로컬)
+      - ./inference_results:/workspace/inference_results
+      
+      # 모델 가중치 (양방향)
+      - ./fine_tuning_weights:/workspace/fine_tuning_weights
+    
+    # 작업 디렉토리
+    working_dir: /workspace
+    
+    # 기본 명령어 (인터랙티브 모드)
+    stdin_open: true
+    tty: true
+    
+    # 네트워크 설정
+    network_mode: bridge
+    
+    # 재시작 정책
+    restart: unless-stopped
+
+# 사용법:
+# 1. 시작: docker-compose up -d
+# 2. 접속: docker-compose exec yolo26-train bash
+# 3. 학습: ./run_all_training_cli.sh
+# 4. 중지: docker-compose down
+# 5. 로그 확인: docker-compose logs -f

@@ -7,21 +7,46 @@ wheels/
 *.egg-info
 
 # Virtual environments
-.venv
-# data
-*.png
+.venv/
+venv/
+env/
+
+# Environment variables
 .env
+.env.local
+
+# Data files
+*.png
+*.jpg
+*.jpeg
 *.db
 
+# Dataset (images excluded, labels kept for structure)
 labels_backup/
 dataset/train/images/
 dataset/train/labels/*.txt
 dataset/valid/images/
 dataset/valid/labels/*.txt
+
+# Training outputs
 results/
 runs/
 train_logs/
+training_logs/
 wandb/
+inference_results/
 
-# Large model files - share via Google Drive instead
+# Model weights - share via Google Drive
 fine_tuning_weights/
+*.pt
+!yolo26*.pt
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db

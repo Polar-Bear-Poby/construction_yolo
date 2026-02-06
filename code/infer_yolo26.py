@@ -11,6 +11,9 @@ from ultralytics import YOLO
 import torch
 from dotenv import load_dotenv
 
+# 프로젝트 루트 자동 감지
+PROJECT_ROOT = Path(__file__).parent.parent.absolute()
+
 # ===== 사용자 설정 변수들 =====
 # 학습된 모델들이 저장된 디렉토리
 DEFAULT_WEIGHTS_DIR = 'fine_tuning_weights'  # 기본 가중치 폴더
@@ -25,12 +28,12 @@ DEFAULT_GPU_DEVICE = '0'     # 사용할 GPU 디바이스
 # 지원하는 이미지 확장자
 SUPPORTED_IMAGE_EXTENSIONS = ['*.jpg', '*.jpeg', '*.png', '*.bmp']
 
-# 기본 출력 디렉토리 패턴
-DEFAULT_OUTPUT_PATTERN = "/home/themiraclesoft/wishket/inference_results/yolo26{model_size}_{timestamp}"
+# 기본 출력 디렉토리 패턴 (상대 경로)
+DEFAULT_OUTPUT_PATTERN = "inference_results/yolo26{model_size}_{timestamp}"
 # ================================
 
-# 환경 변수 로드
-load_dotenv()
+# 환경 변수 로드 (프로젝트 루트 기준)
+load_dotenv(PROJECT_ROOT / '.env')
 
 
 def run_inference(model_path: str, images_dir: str, output_dir: str, conf: float = DEFAULT_CONF, 

@@ -6,10 +6,14 @@
 # 2단계: l(GPU 0,1,2,3) + x(GPU 0,1,2,3) 순차 학습
 # 사용법: ./run_all_training_cli.sh
 
+# 프로젝트 루트 디렉토리 설정
+PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$PROJECT_ROOT"
+
 # .env 파일 로드 (WANDB_API_KEY 등)
-if [ -f "/home/themiraclesoft/wishket/.env" ]; then
+if [ -f ".env" ]; then
     echo "📄 .env 파일 로드 중..."
-    export $(grep -v '^#' /home/themiraclesoft/wishket/.env | xargs)
+    export $(grep -v '^#' .env | xargs)
     echo "✅ 환경변수 로드 완료"
 fi
 
@@ -25,8 +29,8 @@ echo ""
 # 시작 시간 기록
 START_TIME=$(date +%s)
 
-# 로그 디렉토리 설정
-LOG_DIR="/home/themiraclesoft/wishket/training_logs"
+# 로그 디렉토리 설정 (상대 경로)
+LOG_DIR="$PROJECT_ROOT/training_logs"
 mkdir -p $LOG_DIR
 
 echo "📁 로그 저장 위치: $LOG_DIR"
@@ -43,7 +47,7 @@ echo "시작 시간: $(date)"
 
 # YOLO26s 백그라운드 학습 (GPU 0,1)
 echo "🔥 YOLO26s 학습 시작 (GPU 0,1)..."
-uv run python train_yolo26_cli.py \
+uv run python code/yolo26_train_cli.py \
     --model_size s \
     --epochs 300 \
     --batch_size 32 \
@@ -57,7 +61,7 @@ echo "📝 YOLO26s PID: $PID_S"
 
 # YOLO26m 백그라운드 학습 (GPU 2,3)
 echo "🔥 YOLO26m 학습 시작 (GPU 2,3)..."
-uv run python train_yolo26_cli.py \
+uv run python code/yolo26_train_cli.py \
     --model_size m \
     --epochs 300 \
     --batch_size 32 \
@@ -106,7 +110,7 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 # YOLO26l 학습 (GPU 0,1,2,3)
 echo "🔥 YOLO26l 학습 시작 (GPU 0,1,2,3)..."
 echo "시작 시간: $(date)"
-uv run python train_yolo26_cli.py \
+uv run python code/yolo26_train_cli.py \
     --model_size l \
     --epochs 300 \
     --batch_size 32 \
@@ -131,7 +135,7 @@ sleep 10
 # YOLO26x 학습 (GPU 0,1,2,3)
 echo "🔥 YOLO26x 학습 시작 (GPU 0,1,2,3)..."
 echo "시작 시간: $(date)"
-uv run python train_yolo26_cli.py \
+uv run python code/yolo26_train_cli.py \
     --model_size x \
     --epochs 300 \
     --batch_size 24 \
@@ -171,7 +175,7 @@ echo "  YOLO26l: $([ $RESULT_L -eq 0 ] && echo '✅ 성공' || echo '❌ 실패'
 echo "  YOLO26x: $([ $RESULT_X -eq 0 ] && echo '✅ 성공' || echo '❌ 실패')"
 echo ""
 echo "📁 결과 확인:"
-echo "  로컬: /home/themiraclesoft/wishket/results/"
+echo "  로컬: $PROJECT_ROOT/results/"
 echo "  로그: $LOG_DIR/"
 echo "  W&B: https://wandb.ai/ (프로젝트: $WANDB_PROJECT)"
 echo ""

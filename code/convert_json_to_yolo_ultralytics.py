@@ -125,7 +125,8 @@ def convert_all_labels():
     """
     train과 valid labels 모두 변환 (labels_backup에서 변환하여 dataset에 저장)
     """
-    base_path = "/home/themiraclesoft/wishket"
+    # 프로젝트 루트 자동 감지
+    base_path = str(Path(__file__).parent.parent.absolute())
 
     # train labels 변환 (labels_backup -> dataset)
     train_labels_dir = os.path.join(base_path, "labels_backup", "train", "labels")
